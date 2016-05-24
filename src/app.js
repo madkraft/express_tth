@@ -5,18 +5,36 @@ var express = require('express'),
 
 var app = express();
 
+var postsLists = Object.keys(posts).map(function (value) {
+  return posts[value];
+});
+
+app.use('/static', express.static(__dirname + '/public'));
+
+app.set('view engine', 'jade');
+app.set('views', __dirname + '/templates');
+
 app.get('/', function (req, res) {
-  res.send('<h1>Yo Wolrd!</h1>');
+  var path = req.path;
+  res.render('index', {path: path}); // which is virtually the same as 'res.locals.path = path;'
 });
 app.get('/blog/:title?', function (req, res) {
   var title = req.params.title;
 
   if (title === undefined) {
     res.status(503);
-    res.send('This page is under construction');
+    res.render('blog', {posts: postsLists});
   } else {
-    var post = posts[title];
-    res.send(post);
+    var post = posts[title] || {};
+    res.render('post', {post: post});
+  }
+});
+
+app.get('/posts', function (req, res) {
+  if (req.query.raw) {
+    res.json(posts);
+  } else {
+    res.json(postsLists);
   }
 });
 
